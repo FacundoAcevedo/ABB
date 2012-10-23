@@ -26,7 +26,7 @@ int cmp (const char* clave_vieja, const char* clave_nueva){
 }
 
 bool printear(const char* clave, void* dato, void* extra){
-	printf("Clave: %s,\n Dato: %s\n\n", clave, (char*) dato);
+	printf("Clave: %s\nDato: %s\n\n", clave, (char*) dato);
 	return true;
 	}
 
@@ -75,11 +75,20 @@ print_test("Cantidad de arbol0 es 4: ", abb_cantidad(arbol0) == 4);
 
 // Busco clave 2
 print_test("Busco clave 2 con abb_obtener, devuelve oso hormiguero: ", val5 == abb_obtener(arbol0, "2"));
+// Busco clave 111, no existe
+print_test("Busco clave 111 con abb_obtener, devuelve NULL: ", NULL == abb_obtener(arbol0, "111"));
+// Busco clave 33
+print_test("Busco clave 33 con abb_pertenece, devuelve true: ", abb_pertenece(arbol0, "33"));
+// Busco clave 10, no pertenece
+print_test("Busco clave 10 con abb_pertenece, devuelve false: ", !abb_pertenece(arbol0, "10"));
 
+// Borrar
+//~ print_test("Borro nodo hoja, clave 33, devuelve el dato carpintero: ", abb_borrar(arbol0, "33") == val3);
+//~ print_test("Busco el nodo borrado con abb_pertenece, devuelve false: ", !abb_pertenece(arbol0, "33"));
+//~ print_test("Cantidad de arbol0 es 3: ", abb_cantidad(arbol0) == 3);
 
-
-printf ("Hojas: %zu \n", abb_contar_hojas(arbol0));
-abb_in_order(arbol0, printear, NULL);
+//~ printf ("Hojas: %zu \n", abb_contar_hojas(arbol0));
+//~ abb_in_order(arbol0, printear, NULL);
 }
 
 int main(int argc, char **argv)

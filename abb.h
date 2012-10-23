@@ -18,14 +18,14 @@ bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* da
 bool abb_guardar(abb_t *arbol, const char *clave, void *dato); // OK
 void *abb_borrar(abb_t *arbol, const char *clave);
 
-void *abb_obtener(const abb_t *arbol, const char *clave);
-bool abb_pertenece(const abb_t *arbol, const char *clave);
+void *abb_obtener(const abb_t *arbol, const char *clave); // OK
+bool abb_pertenece(const abb_t *arbol, const char *clave); // OK
 
 size_t abb_cantidad(abb_t *arbol); // OK
 
 void abb_destruir(abb_t *arbol);
 
-// EJERCICIO BORRAR
+// EJERCICIO, BORRAR
 size_t abb_contar_hojas(abb_t* arbol); // OK
 
 

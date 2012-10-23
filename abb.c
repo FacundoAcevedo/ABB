@@ -112,6 +112,96 @@ size_t abb_contar_hojas(abb_t* arbol){
 }
 
 
+/* Funcion interna abb_buscar */
+// Recibe un arbol y una clave. 
+// Devuelve el nodo que contiene tal clave, o NULL si no se encuentra.
+
+abb_nodo_t* abb_buscar_r (abb_nodo_t* nodo, abb_comparar_clave_t cmp, const char *clave){
+	// Si el nodo es NULL, llegue al final de la busqeuda y no encontre la clave
+	if (!nodo) 
+		return NULL;
+		
+	// Si la clave del nodo actual coincide, devuelvo el dato de ese nodo
+	if (cmp(nodo->clave, clave) == 0)
+		return nodo;
+		
+	// Si la clave es mayor a la del nodo actual, llamo recursivamente con
+	// el nodo izquierdo
+	if (cmp(nodo->clave, clave) == -1)
+		return abb_buscar_r(nodo->izq, cmp, clave);
+
+	// Si la clave es menor a la del nodo actual, llamo recursivamente con
+	// el nodo derecho
+	if (cmp(nodo->clave, clave) == 1)
+		return abb_buscar_r(nodo->der, cmp, clave);
+	
+	return NULL;
+	
+}
+
+abb_nodo_t* abb_buscar(const abb_t *arbol, const char *clave){
+	if (!arbol) return NULL;
+	return abb_buscar_r (arbol->raiz, arbol->cmp, clave);
+}
+
+
+
+void* abb_obtener (const abb_t* arbol, const char* clave){
+	abb_nodo_t* nodo_buscado = abb_buscar(arbol, clave);
+	if (!nodo_buscado)
+		return NULL;
+	return nodo_buscado->dato;
+}
+
+bool abb_pertenece(const abb_t *arbol, const char *clave){
+	if (abb_buscar (arbol, clave)) return true;
+	return false;
+}
+
+//~ void* abb_borrar_r(abb_nodo_t** nodo, const char* clave, abb_t* arbol){
+	//~ if (!*nodo) return NULL;
+	//~ if ((*nodo)->clave == clave){
+		//~ // Si nodo es hoja
+		//~ if (!(*nodo)->izq && !(*nodo)->der){
+			//~ // Si su padre es NULL (o sea es raiz ppal del arbol)
+			//~ if (&(*nodo) == NULL){
+				//~ arbol = NULL;
+				//~ void* dato = (*nodo)->dato;
+				//~ free(*nodo);
+				//~ return dato;
+			//~ }
+			//~ if (&(*nodo)->izq == (*nodo)){
+				//~ &(*nodo)->izq = NULL;
+				//~ void* dato = (*nodo)->dato;
+				//~ free(*nodo);
+				//~ return dato;
+			//~ }
+			//~ if (&(*nodo)->der == (*nodo)){
+				//~ (&(*nodo)->der) = NULL;
+				//~ void* dato = (*nodo)->dato;
+				//~ free(*nodo);
+				//~ return dato;
+			//~ }
+//~ 
+//~ 
+		//~ }
+		//~ 
+		//~ 
+	//~ }
+//~ 
+//~ }
+//~ 
+//~ void* abb_borrar(abb_t *arbol, const char *clave){
+	//~ if (!arbol) return NULL;
+	//~ return abb_borrar_r(&arbol->raiz, clave, arbol);
+//~ }
+
+
+
+
+
+//***************** ITERADORES ********************
+/* Iterador in order */
 void abb_in_order_r(abb_nodo_t* nodo, bool funcion(const char*, void*, void*), void* extra){
 	if (nodo->izq)
 		abb_in_order_r(nodo->izq, funcion, extra);
@@ -126,39 +216,8 @@ void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void
 	return;
 }
 
-void* abb_obtener_r (abb_nodo_t* nodo, abb_comparar_clave_t cmp, const char *clave){
-	puts( "entro");
-	// Si la clave del nodo actual coincide, devuelvo el dato de ese nodo
-	if (cmp(nodo->clave, clave) == 0){
-		puts ("retorno dato: ");
-		return nodo->dato;
-	}
-
-	// Si la clave es mayor a la del nodo actual, llamo recursivamente con
-	// el nodo izquierdo
-	if (cmp(nodo->clave, clave) == -1)
-		abb_obtener_r(nodo->izq, cmp, clave);
-
-	// Si la clave es menor a la del nodo actual, llamo recursivamente con
-	// el nodo derecho
-	if (cmp(nodo->clave, clave) == 1)
-		abb_obtener_r(nodo->der, cmp, clave);
-	
-	puts ("retorno NULL");
-	return NULL;
-}
-
-void* abb_obtener(const abb_t *arbol, const char *clave){
-	if (!arbol) return NULL;
-	return abb_obtener_r (arbol->raiz, arbol->cmp, clave);
-}
-
-bool abb_pertenece(const abb_t *arbol, const char *clave);
-
-
-
-
-
-
-
-
+/* Iterador externo */
+struct abb_iter{
+	abb_nodo_t* actual;
+	abb_nodo_t* padre;
+};
