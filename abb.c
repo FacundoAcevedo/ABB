@@ -112,3 +112,32 @@ bool abb_guardar(abb_t* arbol, const char* clave, void* dato){
 	if (!arbol) return false;
 	return abb_guardar_r(&arbol->raiz, arbol, clave, dato);
 }
+
+
+// EJERCICIO BORRAR
+size_t abb_contar_hojas_r(abb_nodo_t* nodo){
+	if (!nodo) return 0;
+
+	if (!nodo->izq && !nodo->der) return 1;
+	return abb_contar_hojas_r(nodo->izq) + abb_contar_hojas_r(nodo->der);
+}
+
+size_t abb_contar_hojas(abb_t* arbol){
+	if (!arbol) return 0;
+	return abb_contar_hojas_r(arbol->raiz);
+}
+
+
+void abb_in_order_r(abb_nodo_t* nodo, bool funcion(const char*, void*, void*), void* extra){
+	if (nodo->izq)
+		abb_in_order_r(nodo->izq, funcion, extra);
+	funcion(nodo->clave, nodo->dato, extra);
+	if (nodo->der)
+		abb_in_order_r(nodo->der, funcion, extra);
+	return;
+}
+
+void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void *extra){
+	abb_in_order_r(arbol->raiz, funcion, extra);
+	return;
+}

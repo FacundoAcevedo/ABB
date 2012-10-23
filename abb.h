@@ -29,6 +29,9 @@ size_t abb_cantidad(abb_t *arbol);
 
 void abb_destruir(abb_t *arbol);
 
+// EJERCICIO BORRAR
+size_t abb_contar_hojas(abb_t* arbol);
+
 
 //***************** ITERADORES ********************
 // Iterador externo

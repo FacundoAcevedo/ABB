@@ -25,6 +25,11 @@ int cmp (const char* clave_vieja, const char* clave_nueva){
 	else return (-1);
 }
 
+bool printear(const char* clave, void* dato, void* extra){
+	printf("Clave: %s, Dato: %s", clave, (char*) dato);
+	return true;
+	}
+
 abb_comparar_clave_t cmp_ptr = &cmp;
 
 
@@ -32,18 +37,7 @@ abb_destruir_dato_t destruir_dato (void* dato){
 	free (dato);
 	return NULL;
 }
-size_t abb_contar_hojas_r(abb_nodo_t** nodo, abb_t* arbol){
-	if (!nodo) return 0;
-	abb_nodo_t* izq = (*nodo)->izq;
-	abb_nodo_t* der = (*nodo)->der;
-	if (!izq && !der) return 1;
-	return abb_contar_hojas_r(izq) + abb_contar_hojas_r(der);
-}
 
-size_t abb_contar_hojas(abb_t* arbol){
-	if (!arbol) return 0;
-	return abb_contar_hojas_r(arbol->raiz, arbol);
-}
 
 
 void prueba_abb(void){
@@ -77,6 +71,7 @@ print_test("Guardo clave 99, ornitorrinco en arbol0: ", abb_guardar(arbol0, "99"
 print_test("Cantidad de arbol0 es 4: ", abb_cantidad(arbol0) == 4);
 
 printf ("Hojas: %zu ", abb_contar_hojas(arbol0));
+abb_in_order(arbol0, printear, NULL);
 }
 
 int main(int argc, char **argv)
