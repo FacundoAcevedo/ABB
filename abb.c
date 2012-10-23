@@ -44,30 +44,14 @@ size_t abb_cantidad(abb_t* arbol){
 	return arbol->cant;
 }
 
-abb_nodo_t* abb_ver_raiz (abb_t* arbol){
-	if (!arbol->raiz) return NULL;
-	return arbol->raiz;
-}
-
-const char* ver_clave (abb_nodo_t* nodo){
-	if (!nodo) return NULL;
-	if (!nodo->clave) return NULL;
-	return nodo->clave;
-}
-void* ver_dato (abb_nodo_t* nodo){
-	if (!nodo) return NULL;
-	if (!nodo->dato) return NULL;
-	return nodo->dato;
-}
-
 
 bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* dato){
 	// Si el nodo no existe
 	if (!(*nodo)){
-		puts("Entre a nodo no existe");
+		//~ puts("Entre a nodo no existe");
 		abb_nodo_t* nuevo = abb_nodo_crear(clave, dato);
 		if (nuevo){
-			puts("Asigno lo nuevo");
+			//~ puts("Asigno lo nuevo");
 			*nodo = nuevo;
 			arbol->cant ++;
 			return true;
@@ -79,13 +63,13 @@ bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* da
 	
 	// Si las claves son iguales
 	if (r==0){
-		puts ("Entre a claves iguales");
+		//~ puts ("Entre a claves iguales");
 		// Destruyo el dato de *nodo
 		if (arbol->destruir_dato){
 			arbol->destruir_dato((*nodo)->dato);
 			}
 		// Le asigno el nuevo dato
-		puts("Reemplazo el dato");
+		//~ puts("Reemplazo el dato");
 		(*nodo)->dato = dato;
 		
 		return true;
@@ -93,16 +77,16 @@ bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* da
 	
 	// Si la clave de *nodo es menor a la clave que me pasaron
 	if (r == (-1)){
-		puts("Entre a clave nueva menor");
+		//~ puts("Entre a clave nueva menor");
 		// llamo a abb_guardar_r con el izquierdo
-		puts("Voy al nodo izquierdo");
+		//~ puts("Voy al nodo izquierdo");
 		return abb_guardar_r(&(*nodo)->izq, arbol, clave, dato);
 	}
 	// Si la clave de *nodo es mayor a la clave que me pasaron
 	if (r == 1){
 		// llamo a abb_guardar_r con el derecho
-		puts("Entre a clave nueva mayor");
-		puts("Voy al nodo derecho");
+		//~ puts("Entre a clave nueva mayor");
+		//~ puts("Voy al nodo derecho");
 		return abb_guardar_r(&(*nodo)->der, arbol, clave, dato);
 		}
 	return true;
@@ -141,3 +125,40 @@ void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void
 	abb_in_order_r(arbol->raiz, funcion, extra);
 	return;
 }
+
+void* abb_obtener_r (abb_nodo_t* nodo, abb_comparar_clave_t cmp, const char *clave){
+	puts( "entro");
+	// Si la clave del nodo actual coincide, devuelvo el dato de ese nodo
+	if (cmp(nodo->clave, clave) == 0){
+		puts ("retorno dato: ");
+		return nodo->dato;
+	}
+
+	// Si la clave es mayor a la del nodo actual, llamo recursivamente con
+	// el nodo izquierdo
+	if (cmp(nodo->clave, clave) == -1)
+		abb_obtener_r(nodo->izq, cmp, clave);
+
+	// Si la clave es menor a la del nodo actual, llamo recursivamente con
+	// el nodo derecho
+	if (cmp(nodo->clave, clave) == 1)
+		abb_obtener_r(nodo->der, cmp, clave);
+	
+	puts ("retorno NULL");
+	return NULL;
+}
+
+void* abb_obtener(const abb_t *arbol, const char *clave){
+	if (!arbol) return NULL;
+	return abb_obtener_r (arbol->raiz, arbol->cmp, clave);
+}
+
+bool abb_pertenece(const abb_t *arbol, const char *clave);
+
+
+
+
+
+
+
+

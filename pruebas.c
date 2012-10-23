@@ -26,7 +26,7 @@ int cmp (const char* clave_vieja, const char* clave_nueva){
 }
 
 bool printear(const char* clave, void* dato, void* extra){
-	printf("Clave: %s, Dato: %s", clave, (char*) dato);
+	printf("Clave: %s,\n Dato: %s\n\n", clave, (char*) dato);
 	return true;
 	}
 
@@ -46,7 +46,7 @@ char *val1 = "pez espada";
 char *val2 = "puerco";
 char *val3 = "carpintero";
 char *val4 = "ornitorrinco";
-//~ char *val5 = "zorro";
+char *val5 = "oso hormiguero";
 
 
 
@@ -54,23 +54,31 @@ char *val4 = "ornitorrinco";
 abb_t* arbol0 = abb_crear(*cmp, NULL);
 print_test("Prueba arbol0 vacio: ", arbol0);
 print_test("Cantidad de arbol0 es 0: ", abb_cantidad(arbol0) == 0);
-print_test("La raiz de arbol0 es NULL: ", !abb_ver_raiz(arbol0));
-print_test("Clave de raiz de arbol0 es NULL: ", ver_clave(abb_ver_raiz(arbol0)) == NULL);
 
 // Guardo clave 5, pez espada en la raiz de arbol0
 print_test("Guardo clave 52, pez espada en la raiz de arbol0: ", abb_guardar(arbol0, "52", val1));
 print_test("Cantidad de arbol0 es 1: ", abb_cantidad(arbol0) == 1);
-print_test("Clave de raiz de arbol0 es 52: ", ver_clave(abb_ver_raiz(arbol0)) == (const char*) "52");
-print_test("Dato de raiz de arbol0 es pez espada: ", ver_dato(abb_ver_raiz(arbol0)) == val1);
 
+// Guardo clave 2, puerco en arbol0. Debe guardarse en el hijo izquierdo de 5.
 print_test("Guardo clave 2, puerco en arbol0: ", abb_guardar(arbol0, "2", val2));
 print_test("Cantidad de arbol0 es 2: ", abb_cantidad(arbol0) == 2);
+// Guardo clave 33, carpintero en arbol0. Debe guardarse en el hijo derecho de 2.
 print_test("Guardo clave 33, carpintero en arbol0: ", abb_guardar(arbol0, "33", val3));
 print_test("Cantidad de arbol0 es 3: ", abb_cantidad(arbol0) == 3);
+// Guardo clave 99, ornitorrinco en arbol0. Debe guardarse en el hijo derecho de 5.
 print_test("Guardo clave 99, ornitorrinco en arbol0: ", abb_guardar(arbol0, "99", val4));
 print_test("Cantidad de arbol0 es 4: ", abb_cantidad(arbol0) == 4);
+// Guardo clave 2, oso hormiguero en arbol0. Debe reemplazar a (2, puerco).
+print_test("Reemplazo dato de clave 2 por oso hormiguero en arbol0: ", abb_guardar(arbol0, "2", val5));
+// La cantidad debe haber permanecido constante.
+print_test("Cantidad de arbol0 es 4: ", abb_cantidad(arbol0) == 4);
 
-printf ("Hojas: %zu ", abb_contar_hojas(arbol0));
+// Busco clave 2
+print_test("Busco clave 2 con abb_obtener, devuelve oso hormiguero: ", val5 == abb_obtener(arbol0, "2"));
+
+
+
+printf ("Hojas: %zu \n", abb_contar_hojas(arbol0));
 abb_in_order(arbol0, printear, NULL);
 }
 
