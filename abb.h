@@ -1,5 +1,6 @@
 #ifndef ABB_H
 #define ABB_H
+#include "pila.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -20,7 +21,7 @@ void *abb_borrar(abb_t *arbol, const char *clave);
 
 void *abb_obtener(const abb_t *arbol, const char *clave); // OK
 bool abb_pertenece(const abb_t *arbol, const char *clave); // OK
-
+pila_t* abb_apila_valores(const abb_t* arbol);
 size_t abb_cantidad(abb_t *arbol); // OK
 
 void abb_destruir(abb_t *arbol);
