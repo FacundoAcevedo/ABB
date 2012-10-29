@@ -1,5 +1,5 @@
 #include "abb.h"
-#include "pila.h"
+#include "tdas.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -33,6 +33,7 @@ abb_nodo_t* abb_nodo_crear (const char* clave, void* dato){
 // Crea un arbol
 abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato){
 	abb_t* arbol = malloc(sizeof(abb_t));
+	//~ printf("dire arbol al crear: %p", arbol);
 	if (arbol == NULL) return NULL;
 	arbol->raiz = NULL;
 	arbol->cant = 0;
@@ -269,81 +270,77 @@ void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void
 struct abb_iter{
 	pila_t* pila;
 	abb_nodo_t* actual;
-	const abb_t* arbol;
 };
 
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol){
+    // Si el arbol no existe
     if (!arbol) return NULL;
+    // Si la raiz es nula (arbol vacio)
+    if (!arbol->raiz) return NULL;
+    
     abb_iter_t* iter = malloc(sizeof(abb_iter_t));
-	iter->arbol = arbol;
-	pila_t* pila = pila_crear();
-	iter->pila = pila;
+	iter->pila = pila_crear();
 	abb_nodo_t* nodo = arbol->raiz;
 	while (nodo->izq){
+		pila_apilar(iter->pila, nodo);
 		nodo = nodo->izq;
-		}
-	pila_apilar(pila, nodo);
-	iter->actual = pila_ver_tope(pila);
+	}
+	iter->actual = nodo;
     return iter;
 }
 
-bool abb_iter_in_avanzar_r(abb_nodo_t* actual, pila_t* pila){
-	puts("entre a iter_in_avanzar_r");
-	printf("actual: %s", actual->clave);
-	if (!actual) return false;
-	if (actual->izq){
-		abb_iter_in_avanzar_r(actual->izq, pila);
-		pila_apilar(pila, actual->izq);
-	}
-	printf( "Desapilo: %s", actual->clave);
-	pila_desapilar(pila);
-
-	if (actual->der){
-		return abb_iter_in_avanzar_r(actual->der, pila);
-		pila_apilar(pila, actual->der);
-	}
-	return true;
-	
-}
-//~ 
-bool abb_iter_in_avanzar(abb_iter_t *iter){
+bool abb_iter_in_avanzar(abb_iter_t* iter){
 	if (abb_iter_in_al_final(iter)) return false;
-	abb_iter_in_avanzar_r(iter->actual, iter->pila);
-	
+	if (!iter->actual->der)
+		iter->actual = pila_desapilar(iter->pila);
+	else{
+		iter->actual = iter->actual->der;
+		while (iter->actual->izq){
+			pila_apilar(iter->pila, iter->actual);
+			iter->actual = iter->actual->izq;
+		}
+	}
 	return true;
 }
+
 
 
 const char *abb_iter_in_ver_actual(const abb_iter_t *iter){
-	abb_nodo_t* tope = pila_ver_tope(iter->pila);
-	if (!tope) return NULL;
-	const char* clave = tope->clave;
-	return clave;
+	if (!iter->actual) return NULL;
+	return iter->actual->clave;
 }
 
 bool abb_iter_in_al_final(const abb_iter_t *iter){
 	if (!iter->actual) return true;
 	return false;
 }
-//~ void abb_iter_in_destruir(abb_iter_t* iter);	
+
+void abb_iter_in_destruir(abb_iter_t* iter){
+	pila_destruir(iter->pila, NULL);
+	free(iter->actual);
+	free(iter);
+	return;
+}	
 
 void abb_destruir_r(abb_nodo_t* nodo, abb_destruir_dato_t funcion){
-	puts("entre a bb_destruir_r");
 	if (nodo->izq)
 		abb_destruir_r(nodo->izq, funcion);
-	if (funcion)
-		funcion(nodo->dato);
-	puts ("Libero nodo");
-	free(nodo);
+
 	if (nodo->der)
 		abb_destruir_r(nodo->der, funcion);
+
+	if (funcion)
+		funcion(nodo->dato);
+
+	free(nodo);
+
 	return;
 }
 
 /* Destructor */
 void abb_destruir(abb_t* arbol){
-	puts("Entre a abb_destruir");
-	abb_destruir_r(arbol->raiz, arbol->destruir_dato);
-	puts ("Libero arbol");
+	if (!arbol) return;
+	if (arbol->raiz)
+		abb_destruir_r(arbol->raiz, arbol->destruir_dato);
 	free (arbol);
-	}
+}
