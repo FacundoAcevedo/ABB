@@ -53,6 +53,8 @@ void destruir_lista (void* lista){
 
 abb_destruir_dato_t destruir_dato_lista = &destruir_lista;
 
+size_t abb_contar_hojas(abb_t* arbol);  
+
 /* PRUEBA_ABB */
 void prueba_abb(void){
 	
@@ -173,6 +175,7 @@ lista_insertar_ultimo(val22, "o");
 	print_test("Cantidad de hojas arbol0 despues de borrar es 3: ", abb_contar_hojas(arbol0) == 2);
 
 	// Iterador externo
+	printf("Iterador inorder con función de impresión: \n");
 	abb_in_order(arbol0, printear_dato_est, NULL);
 
 	// Iterador interno
@@ -205,7 +208,11 @@ lista_insertar_ultimo(val22, "o");
 	abb_iter_in_destruir(iter);
 	// Con arbol vacio
 	abb_t* arbol1 = abb_crear(cmp, NULL);
-	print_test("Iterador interno (crear, vacio): ", !abb_iter_in_crear(arbol1));
+	abb_iter_t* iter1 = abb_iter_in_crear(arbol1);
+	print_test("Iterador interno, arbol vacio (ver actual es NULL): ", !abb_iter_in_ver_actual(iter1));
+	print_test("Iterador interno, arbol vacio (al final es true): ", abb_iter_in_al_final(iter1));
+	print_test("Iterador interno, arbol vacio (avanzar es false): ", !abb_iter_in_avanzar(iter1));
+	abb_iter_in_destruir(iter1);
 
 
 	// Destruir arbol
@@ -288,6 +295,7 @@ lista_insertar_ultimo(val22, "o");
 	print_test("Cantidad de hojas arbol2 despues de borrar es 3: ", abb_contar_hojas(arbol2) == 2);
 
 	// Iterador externo
+	printf("Iterador inorder con funcion de impresion:\n");
 	abb_in_order(arbol2, printear, NULL);
 
 	// Iterador interno

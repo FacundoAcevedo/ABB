@@ -5,34 +5,31 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-typedef struct abb_nodo abb_nodo_t;	// OK
-typedef struct abb abb_t; // OK
+typedef struct abb_nodo abb_nodo_t;	
+typedef struct abb abb_t;
 
-typedef int (*abb_comparar_clave_t) (const char *, const char *); // OK
+typedef int (*abb_comparar_clave_t) (const char *, const char *);  
 typedef void (*abb_destruir_dato_t) (void *); 
 
 
-abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato); // OK
-abb_nodo_t* abb_nodo_crear (const char* clave, void* dato); // OK
+abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato);  
+abb_nodo_t* abb_nodo_crear (const char* clave, void* dato);  
 
-bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* dato); // OK
-bool abb_guardar(abb_t *arbol, const char *clave, void *dato); // OK
+bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* dato);  
+bool abb_guardar(abb_t *arbol, const char *clave, void *dato);  
 void *abb_borrar(abb_t *arbol, const char *clave);
 
-void *abb_obtener(const abb_t *arbol, const char *clave); // OK
-bool abb_pertenece(const abb_t *arbol, const char *clave); // OK
+void *abb_obtener(const abb_t *arbol, const char *clave);  
+bool abb_pertenece(const abb_t *arbol, const char *clave);  
 pila_t* abb_apila_valores(const abb_t* arbol);
-size_t abb_cantidad(abb_t *arbol); // OK
+size_t abb_cantidad(abb_t *arbol);  
 
 void abb_destruir(abb_t *arbol);
-
-// EJERCICIO, BORRAR
-size_t abb_contar_hojas(abb_t* arbol); // OK
 
 
 //***************** ITERADORES ********************
 // Iterador externo
-void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void *extra); // OK
+void abb_in_order(abb_t *arbol, bool funcion(const char *, void *, void *), void *extra);  
 
 // Iterador interno
 typedef struct abb_iter abb_iter_t;

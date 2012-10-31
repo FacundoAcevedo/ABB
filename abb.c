@@ -33,7 +33,6 @@ abb_nodo_t* abb_nodo_crear (const char* clave, void* dato){
 // Crea un arbol
 abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato){
 	abb_t* arbol = malloc(sizeof(abb_t));
-	//~ printf("dire arbol al crear: %p", arbol);
 	if (arbol == NULL) return NULL;
 	arbol->raiz = NULL;
 	arbol->cant = 0;
@@ -251,7 +250,6 @@ void* abb_borrar(abb_t *arbol, const char *clave){
 //***************** ITERADORES ********************
 /* Iterador in order */
 void abb_in_order_r(abb_nodo_t* nodo, bool funcion(const char*, void*, void*), void* extra){
-	//~ printf("Nodo: %p", nodo);
 	if (nodo->izq)
 		abb_in_order_r(nodo->izq, funcion, extra);
 	funcion(nodo->clave, nodo->dato, extra);
@@ -275,15 +273,14 @@ struct abb_iter{
 abb_iter_t *abb_iter_in_crear(const abb_t *arbol){
     // Si el arbol no existe
     if (!arbol) return NULL;
-    // Si la raiz es nula (arbol vacio)
-    if (!arbol->raiz) return NULL;
-    
     abb_iter_t* iter = malloc(sizeof(abb_iter_t));
 	iter->pila = pila_crear();
 	abb_nodo_t* nodo = arbol->raiz;
-	while (nodo->izq){
-		pila_apilar(iter->pila, nodo);
-		nodo = nodo->izq;
+	if (arbol->raiz){
+		while (nodo->izq){
+			pila_apilar(iter->pila, nodo);
+			nodo = nodo->izq;
+		}
 	}
 	iter->actual = nodo;
     return iter;
