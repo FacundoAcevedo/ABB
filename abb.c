@@ -1,9 +1,11 @@
 #include "abb.h"
 #include "tdas.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 struct abb_nodo{
 	const char* clave;
@@ -29,7 +31,14 @@ abb_nodo_t* abb_nodo_crear (const char* clave, void* dato){
 	nodo->der = NULL;
 	return nodo;
 }
-
+// Libera nodo->clave y nodo, devuelve nodo->dato
+void* abb_nodo_destruir(abb_nodo_t* nodo){
+	if (!nodo) return NULL;
+	void* dato = nodo->dato;
+	free((char*) nodo->clave);
+	free(nodo);
+	return dato;
+}
 // Crea un arbol
 abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato){
 	abb_t* arbol = malloc(sizeof(abb_t));
@@ -50,7 +59,15 @@ size_t abb_cantidad(abb_t* arbol){
 bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* dato){
 	// Si el nodo no existe
 	if (!(*nodo)){
-		abb_nodo_t* nuevo = abb_nodo_crear(clave, dato);
+		// Hago una copia de la clave
+		char* nueva_clave = malloc(sizeof(char) * (1+ strlen(clave)));
+		if (!nueva_clave){
+			free(nueva_clave);
+			return false;
+		}
+		strcpy(nueva_clave, clave);
+		//~ printf("Nueva_clave: %s", nueva_clave);
+		abb_nodo_t* nuevo = abb_nodo_crear(nueva_clave, dato);
 		if (nuevo){
 			*nodo = nuevo;
 			arbol->cant ++;
@@ -63,10 +80,7 @@ bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* da
 	
 	// Si las claves son iguales
 	if (r==0){
-		// Destruyo el dato de *nodo
-		if (arbol->destruir_dato){
-			arbol->destruir_dato((*nodo)->dato);
-			}
+		puts("####Entre a claves iguales");
 		// Le asigno el nuevo dato
 		(*nodo)->dato = dato;
 		
@@ -88,7 +102,10 @@ bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* da
 
 bool abb_guardar(abb_t* arbol, const char* clave, void* dato){
 	if (!arbol) return false;
+
+	printf("Dato: %d, Cantidad: %zu \n", dato, arbol->cant);
 	return abb_guardar_r(&arbol->raiz, arbol, clave, dato);
+
 }
 
 
@@ -169,7 +186,7 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 			// Si su padre es NULL (o sea es raiz ppal del arbol)
 			if (padre == NULL){
 				// Arbol apunta a NULL
-				arbol = NULL;
+				arbol->raiz = NULL;
 			}
 			// Si nodo es el hijo izquierdo de su padre
 			else if (padre->izq == nodo){
@@ -182,10 +199,8 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 				(padre->der) = NULL;
 			}
 			
-			void* dato = nodo->dato;
-			free(nodo);
 			arbol->cant --;
-			return dato;
+			return abb_nodo_destruir(nodo);
 		}
 		// Si tiene un solo hijo (izq)
 		if ((!nodo->der) && (nodo->izq)){
@@ -194,10 +209,8 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 				padre->der = nodo->izq;
 			else if (nodo == padre->izq)
 				padre->izq = nodo->izq;
-			void* dato = nodo->dato;
-			free(nodo);
 			arbol->cant --;
-			return dato;			
+			return abb_nodo_destruir(nodo);
 		}
 		// Si tiene un soo hijo (der)
 		if ((!nodo->izq) && (nodo->der)){
@@ -206,10 +219,8 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 				padre->der = nodo->der;
 			else if (nodo == padre->izq)
 				padre->izq = nodo->der;
-			void* dato = nodo->dato;
-			free(nodo);
 			arbol->cant --;
-			return dato;			
+			return abb_nodo_destruir(nodo);
 		}
 		// Si tiene dos hijos
 		abb_nodo_t* reemplazante = nodo->der;
@@ -219,7 +230,6 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 			reemplazante = reemplazante->izq;
 		}
 
-		void* dato = nodo->dato;
 		if (!padre){ 
 			padre = reemplazante;
 			arbol->raiz = padre;
@@ -230,10 +240,8 @@ void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t
 			padre->izq = reemplazante;
 
 		reemplazante->izq = hijo_izq_reempl;
-		free(nodo);
 		arbol->cant --;
-		return dato;			
-		
+		return abb_nodo_destruir(nodo);
 
 	}
 	return NULL;
@@ -314,7 +322,6 @@ bool abb_iter_in_al_final(const abb_iter_t *iter){
 
 void abb_iter_in_destruir(abb_iter_t* iter){
 	pila_destruir(iter->pila, NULL);
-	free(iter->actual);
 	free(iter);
 	return;
 }	
@@ -325,12 +332,10 @@ void abb_destruir_r(abb_nodo_t* nodo, abb_destruir_dato_t funcion){
 
 	if (nodo->der)
 		abb_destruir_r(nodo->der, funcion);
-
+	
+	void* dato = abb_nodo_destruir(nodo);
 	if (funcion)
-		funcion(nodo->dato);
-
-	free(nodo);
-
+		funcion(dato);
 	return;
 }
 
