@@ -21,11 +21,24 @@ struct abb{
 	abb_destruir_dato_t destruir_dato;
 	};
 
+// Crea una copia de la clave pasada por parametro (dato tipo const char*)
+// Devuelve NULL si no funciono malloc(), devuelve la copia en caso contrario
+// (dato tipo const char*)
+char* crear_clave(const char* clave){
+	char *copia = malloc (sizeof(char) * (strlen(clave) + 1));
+	if (!copia)
+		return NULL;
+	strcpy(copia, clave);
+	return copia;
+}
 
+// Crea un nodo (dato tipo abb_nodo_t*). Recibe una clave (dato tipo const
+// char*) y un dato (void*).
+// Devuelve el nodo creado y NULL si fallo malloc()
 abb_nodo_t* abb_nodo_crear (const char* clave, void* dato){
 	abb_nodo_t* nodo = malloc(sizeof(abb_nodo_t));
 	if (!nodo) return NULL;
-	nodo->clave = clave;
+	nodo->clave = crear_clave(clave);
 	nodo->dato = dato;
 	nodo->izq = NULL;
 	nodo->der = NULL;
@@ -35,11 +48,15 @@ abb_nodo_t* abb_nodo_crear (const char* clave, void* dato){
 void* abb_nodo_destruir(abb_nodo_t* nodo){
 	if (!nodo) return NULL;
 	void* dato = nodo->dato;
-	free((char*) nodo->clave);
+	// Si no pongo char* da warning! So stop complaining!
+	free((char*)nodo->clave);
 	free(nodo);
 	return dato;
 }
-// Crea un arbol
+// Crea un arbol (tipo abb_t*)
+// Recibe una funcion del tipo abb_comparar_clave_t y una del tipo
+// abb_destruir_dato_t
+// Devuelve NULL si fallo malloc(), el arbol en caso contrario
 abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato){
 	abb_t* arbol = malloc(sizeof(abb_t));
 	if (arbol == NULL) return NULL;
@@ -50,66 +67,75 @@ abb_t* abb_crear(abb_comparar_clave_t cmp, abb_destruir_dato_t destruir_dato){
 	return arbol;
 }
 
+// Recibe dato tipo abb_t* y devuelve dato tipo size_t con la cantidad
+// de elementos guardados en el arbol.
+// si el arbol pasado por parametro no existe, devuelve 0.
 size_t abb_cantidad(abb_t* arbol){
 	if (!arbol) return 0;
 	return arbol->cant;
 }
 
 
-bool abb_guardar_r (abb_nodo_t** nodo, abb_t* arbol, const char* clave, void* dato){
+bool abb_guardar_r (abb_nodo_t* nodo, abb_nodo_t* padre, int lado, abb_t* arbol, const char* clave, void* dato){
+	// lado = 1 "derecha"
+	// lado = -1 "izquierda
 	// Si el nodo no existe
-	if (!(*nodo)){
-		// Hago una copia de la clave
-		char* nueva_clave = malloc(sizeof(char) * (1+ strlen(clave)));
-		if (!nueva_clave){
-			free(nueva_clave);
-			return false;
-		}
-		strcpy(nueva_clave, clave);
-		//~ printf("Nueva_clave: %s", nueva_clave);
-		abb_nodo_t* nuevo = abb_nodo_crear(nueva_clave, dato);
-		if (nuevo){
-			*nodo = nuevo;
-			arbol->cant ++;
-			return true;
-		}
-		return false;
+	if (!nodo){
+		nodo = abb_nodo_crear(clave, dato);
+		arbol->cant ++;
+
+		if (lado == 1)
+			padre->der = nodo;
+		else if (lado == -1)
+			padre->izq = nodo;
+		
+		return true;
 	}
+
 	
-	int r = arbol->cmp((*nodo)->clave, clave);
-	
-	// Si las claves son iguales
+	int r = arbol->cmp(nodo->clave, clave);
+
 	if (r==0){
-		puts("####Entre a claves iguales");
-		// Le asigno el nuevo dato
-		(*nodo)->dato = dato;
+		if (arbol->destruir_dato)
+			arbol->destruir_dato(nodo->dato);
+		nodo->dato = dato;
 		
 		return true;
 	}
 	
 	// Si la clave de *nodo es menor a la clave que me pasaron
-	if (r == (-1)){
+	if (r < 0){
 		// llamo a abb_guardar_r con el izquierdo
-		return abb_guardar_r(&(*nodo)->izq, arbol, clave, dato);
+		return abb_guardar_r(nodo->der, nodo, 1, arbol, clave, dato);
 	}
 	// Si la clave de *nodo es mayor a la clave que me pasaron
-	if (r == 1){
+	if (r > 0){
 		// llamo a abb_guardar_r con el derecho
-		return abb_guardar_r(&(*nodo)->der, arbol, clave, dato);
+		return abb_guardar_r(nodo->izq, nodo, -1, arbol, clave, dato);
 		}
 	return true;
 }
 
+// Recibe un arbol, un const char* y un void* para crear un nuevo nodo y guardarlo
+// en el arbol. Si ya existe dato con la clave pasada, se reemplaza el dato
+// en el nodo con la clave repetida.
 bool abb_guardar(abb_t* arbol, const char* clave, void* dato){
 	if (!arbol) return false;
-
-	printf("Dato: %d, Cantidad: %zu \n", dato, arbol->cant);
-	return abb_guardar_r(&arbol->raiz, arbol, clave, dato);
+	// Si el arbol esta vacio, guardo en la raiz
+	if (arbol->cant == 0){
+		abb_nodo_t* nuevo = abb_nodo_crear(clave, dato);
+		arbol->raiz = nuevo;
+		arbol->cant ++;
+		return true;
+	}
+	// llamada a la recursiva
+	else
+		return abb_guardar_r(arbol->raiz, NULL, 0, arbol, clave, dato);
 
 }
 
 
-// EJERCICIO BORRAR
+// EJERCICIO extra. Cuenta la cantidad de hojas de un arbol
 size_t abb_contar_hojas_r(abb_nodo_t* nodo){
 	if (!nodo) return 0;
 
@@ -123,10 +149,9 @@ size_t abb_contar_hojas(abb_t* arbol){
 }
 
 
-/* Funcion interna abb_buscar */
+
 // Recibe un arbol y una clave. 
 // Devuelve el nodo que contiene tal clave, o NULL si no se encuentra.
-
 abb_nodo_t* abb_buscar_r (abb_nodo_t* nodo, abb_comparar_clave_t cmp, const char *clave){
 	// Si el nodo es NULL, llegue al final de la busqeuda y no encontre la clave
 	if (!nodo) 
@@ -137,26 +162,30 @@ abb_nodo_t* abb_buscar_r (abb_nodo_t* nodo, abb_comparar_clave_t cmp, const char
 		return nodo;
 		
 	// Si la clave es mayor a la del nodo actual, llamo recursivamente con
-	// el nodo izquierdo
-	if (cmp(nodo->clave, clave) == -1)
-		return abb_buscar_r(nodo->izq, cmp, clave);
+	// el nodo derecho
+	if (cmp(nodo->clave, clave) < 0)
+		return abb_buscar_r(nodo->der, cmp, clave);
 
 	// Si la clave es menor a la del nodo actual, llamo recursivamente con
-	// el nodo derecho
-	if (cmp(nodo->clave, clave) == 1)
-		return abb_buscar_r(nodo->der, cmp, clave);
+	// el nodo izquierdo
+	if (cmp(nodo->clave, clave) > 0)
+		return abb_buscar_r(nodo->izq, cmp, clave);
 	
 	return NULL;
 	
 }
 
+// Recibe un arbol y una clave, devuelve NULL si no encuentra la clave en
+// el arbol o dato de tipo abb_nodo_t* si encuentra el nodo que contiene
+// la clave
 abb_nodo_t* abb_buscar(const abb_t *arbol, const char *clave){
-	if (!arbol) return NULL;
-	return abb_buscar_r (arbol->raiz, arbol->cmp, clave);
+	if (!arbol)
+		return NULL;
+	return abb_buscar_r(arbol->raiz, arbol->cmp, clave);
 }
 
 
-
+// Devuelve el dato del nodo que contiene la clave pasada por parametro.
 void* abb_obtener (const abb_t* arbol, const char* clave){
 	abb_nodo_t* nodo_buscado = abb_buscar(arbol, clave);
 	if (!nodo_buscado)
@@ -164,92 +193,159 @@ void* abb_obtener (const abb_t* arbol, const char* clave){
 	return nodo_buscado->dato;
 }
 
+
+// devuelve true si encuentra la clave en el arbol, false en caso contrario.
 bool abb_pertenece(const abb_t *arbol, const char *clave){
-	if (abb_buscar (arbol, clave)) return true;
-	return false;
+	return abb_buscar(arbol, clave) != NULL;
 }
 
-void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, const char* clave, abb_t* arbol){
-	if (!nodo){
-		return NULL;
+// Borra un nodo que es hoja
+void* abb_borrar_hoja(abb_nodo_t* nodo, abb_nodo_t* padre, int lado, abb_t* arbol){
+	// Si su padre es NULL (o sea es raiz ppal del arbol)
+	if (padre == NULL){
+		// Arbol apunta a NULL
+		arbol->raiz = NULL;
 	}
-	if (arbol->cmp(nodo->clave, clave) == 1)
-		return abb_borrar_r(nodo->der, nodo, clave, arbol);
-
-	if (arbol->cmp(nodo->clave, clave) == -1)
-		return abb_borrar_r(nodo->izq, nodo, clave, arbol);
-
+	// Si nodo es el hijo izquierdo de su padre
+	else if (lado == 1){
+		// La rama izquierda del padre apunta a NULL
+		padre->izq = NULL;
+	}
+	// Si nodo es el hijo derecho de su padre
+	else if (lado == -1){
+		// La rama derecha del padre apunta a NULL
+		(padre->der) = NULL;
+	}
 	
-	if (arbol->cmp(nodo->clave, clave) == 0){
-		// Si nodo es hoja
-		if (!nodo->izq && !nodo->der){
-			// Si su padre es NULL (o sea es raiz ppal del arbol)
-			if (padre == NULL){
-				// Arbol apunta a NULL
-				arbol->raiz = NULL;
-			}
-			// Si nodo es el hijo izquierdo de su padre
-			else if (padre->izq == nodo){
-				// La rama izquierda del padre apunta a NULL
-				padre->izq = NULL;
-			}
-			// Si nodo es el hijo derecho de su padre
-			else if (padre->der == nodo){
-				// La rama derecha del padre apunta a NULL
-				(padre->der) = NULL;
-			}
+	arbol->cant --;
+	return abb_nodo_destruir(nodo);
+}
+
+
+// Borra un nodo que tiene un solo hijo
+void* abb_borrar_con_hijo_unico(abb_nodo_t* nodo, abb_nodo_t* padre, int lado, abb_t* arbol){
+
+	// Si tiene hijo izquierdo
+	if ((!nodo->der) && (nodo->izq)){
+		if (!padre) 
+			arbol->raiz = nodo->izq;
 			
-			arbol->cant --;
-			return abb_nodo_destruir(nodo);
-		}
-		// Si tiene un solo hijo (izq)
-		if ((!nodo->der) && (nodo->izq)){
-			if (!padre) arbol->raiz = nodo->izq;
-			else if (nodo == padre->der)
-				padre->der = nodo->izq;
-			else if (nodo == padre->izq)
-				padre->izq = nodo->izq;
-			arbol->cant --;
-			return abb_nodo_destruir(nodo);
-		}
-		// Si tiene un soo hijo (der)
-		if ((!nodo->izq) && (nodo->der)){
-			if (!padre) arbol->raiz = nodo->der;
-			else if (nodo == padre->der)
-				padre->der = nodo->der;
-			else if (nodo == padre->izq)
-				padre->izq = nodo->der;
-			arbol->cant --;
-			return abb_nodo_destruir(nodo);
-		}
-		// Si tiene dos hijos
-		abb_nodo_t* reemplazante = nodo->der;
-		abb_nodo_t* hijo_izq_reempl = nodo->izq;
-		while (true){
-			if (reemplazante->izq == NULL) break;
-			reemplazante = reemplazante->izq;
-		}
+		else if (lado == -1)
+			padre->der = nodo->izq;
 
-		if (!padre){ 
-			padre = reemplazante;
-			arbol->raiz = padre;
-		}
-		else if (nodo == padre->der)
-			padre->der = reemplazante;
-		else if (nodo == padre->izq)
-			padre->izq = reemplazante;
+		else if (lado == 1)
+			padre->izq = nodo->izq;
 
-		reemplazante->izq = hijo_izq_reempl;
 		arbol->cant --;
 		return abb_nodo_destruir(nodo);
+	}
 
+	// Si tiene hijo derecho
+	else if ((nodo->der) && (!nodo->izq)){
+		if (!padre) 
+			arbol->raiz = nodo->der;
+		else if (lado == -1)
+			padre->der = nodo->der;
+		else if (lado == 1)
+			padre->izq = nodo->der;
+		arbol->cant --;
+		return abb_nodo_destruir(nodo);
 	}
 	return NULL;
 }
 
+
+// Funcion que dado un nodo busca sus descendientes izquierdos. Devuelve
+// el padre del mas izquierdo
+abb_nodo_t* buscar_padre_mas_izq(abb_nodo_t* reemplazante){
+	abb_nodo_t* padre_del_reempl = NULL; 
+	while (reemplazante->izq != NULL){
+		padre_del_reempl = reemplazante;
+		// reemplazante se transforma en su izquierdo
+		reemplazante = reemplazante->izq;
+	}
+	return padre_del_reempl;
+}
+
+// Asigna los hijos que va a tener un nodo reemplazante de izquierda
+void asignar_hijos_a_reempl_de_izq(abb_nodo_t* padre_del_reempl, abb_nodo_t* nodo){
+	abb_nodo_t* reemplazante = padre_del_reempl->izq;
+	
+	padre_del_reempl->izq = reemplazante->der;
+	// De todas formas
+	reemplazante->izq = nodo->izq;
+	reemplazante->der = nodo->der;
+	
+	return;
+}
+
+
+// Borra un nodo con dos hijos
+void* abb_borrar_con_2hijos(abb_nodo_t* nodo, abb_nodo_t* padre, int lado, abb_t* arbol){
+	
+	abb_nodo_t* padre_del_reemplazante = buscar_padre_mas_izq(nodo->der);
+	abb_nodo_t* reemplazante;
+	if (!padre_del_reemplazante){
+		reemplazante = nodo->der;
+		reemplazante->izq = nodo->izq;
+	}
+	else{
+		reemplazante = padre_del_reemplazante->izq;
+		asignar_hijos_a_reempl_de_izq(padre_del_reemplazante, nodo);
+	}
+	
+	if (!padre){
+		arbol->raiz = reemplazante;
+	}
+	
+	else if (lado == -1){
+		padre->der = reemplazante;
+	}
+	else if (lado == 1){
+		padre->izq = reemplazante;
+	}
+	
+	arbol->cant --;
+	return abb_nodo_destruir(nodo);
+}
+
+
+// Funcion recursiva de borrar
+void* abb_borrar_r(abb_nodo_t* nodo, abb_nodo_t* padre, int lado, const char* clave, abb_t* arbol){
+	// lado -1 "izq"
+	// lado 1 "der"
+	int r = arbol->cmp(nodo->clave, clave);
+	if (r > 0)
+		return abb_borrar_r(nodo->izq, nodo, 1, clave, arbol);
+	
+	if (r < 0)
+		return abb_borrar_r(nodo->der, nodo, -1, clave, arbol);
+	
+	if (r == 0){
+		// Si nodo es hoja
+		if (!nodo->izq && !nodo->der)
+			return abb_borrar_hoja(nodo, padre, lado, arbol);
+		
+		// Si tiene un solo hijo
+		else if ((!nodo->der && nodo->izq) || (!nodo->izq && nodo->der))
+			return abb_borrar_con_hijo_unico(nodo, padre, lado, arbol);
+		
+		// Si tiene dos hijos
+		else if (nodo->der && nodo->izq)
+			return abb_borrar_con_2hijos(nodo, padre, lado, arbol);
+	}
+	return NULL;
+}
+
+// Dado un arbol y una clave, se encarga de borrar el nodo que contiene
+// dicha clave. Devuelve el dato del nodo borrado.
+// si el nodo buscado no existe devuelve NULL.
 void* abb_borrar(abb_t *arbol, const char *clave){
 	if (!arbol) return NULL;
-	return abb_borrar_r(arbol->raiz, NULL, clave, arbol);
+	if (!abb_pertenece(arbol, clave))
+		return NULL;
+	else
+		return abb_borrar_r(arbol->raiz, NULL, 0, clave, arbol);
 }
 
 
@@ -332,6 +428,7 @@ void abb_destruir_r(abb_nodo_t* nodo, abb_destruir_dato_t funcion){
 
 	if (nodo->der)
 		abb_destruir_r(nodo->der, funcion);
+	
 	
 	void* dato = abb_nodo_destruir(nodo);
 	if (funcion)
